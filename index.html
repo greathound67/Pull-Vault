@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Monster Vault</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Pullvault</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#12121c;--pn:#1d1d2e;--tx:#e8e8f2;--mu:#8a8aa6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px system-ui,sans-serif}
@@ -157,11 +157,12 @@ nav{flex-wrap:wrap}#toasts{position:fixed;right:12px;bottom:12px;z-index:60;disp
 #fx.fx-jp{background:radial-gradient(circle,#fff 0,#ffd54a88 30%,transparent 70%);animation:fxo 1.6s forwards}
 #fx.fx-jp::before{content:"";position:absolute;inset:0;background:#ff1e1e;opacity:.35;animation:strobe .3s steps(1) infinite}@keyframes strobe{50%{background:#ffd54a}}
 #ban.jp{color:#ffd54a;font-weight:900;text-shadow:0 0 12px #ff1e1e,0 3px 0 #7a0000,0 0 30px #ffd54a;animation:bn 1.3s ease-out,jpb .2s steps(1) 6}@keyframes jpb{50%{color:#fff}}
+input{font:inherit;padding:8px;background:#12121c;color:var(--tx);border:1px solid #44446a;border-radius:8px;max-width:100%}
 </style></head><body>
-<div id="top"><div>Money <b id="co">$0.00</b></div><div>Idle <span id="id">0</span>/s</div><div>Auto <span id="au">0</span>/s</div><div id="sv" style="color:var(--mu);font-size:12px"></div>
-<nav><button data-t="p1" class="on">Click</button><button data-t="p2">Shop</button><button data-t="p3">Inventory</button><button data-t="p4">Binder</button><button data-t="p5">Info</button><button data-t="p6">Achievements</button></nav></div>
+<div id="top"><div>Money <b id="co">$0.00</b></div><div>Idle <span id="id">0</span>/s</div><div>Auto <span id="au">0</span>/s</div><div id="sv" style="color:var(--mu);font-size:12px"></div><div id="cl" style="color:var(--mu);font-size:12px"></div>
+<nav><button data-t="p1" class="on">Click</button><button data-t="p2">Shop</button><button data-t="p3">Inventory</button><button data-t="p4">Binder</button><button data-t="p5">Info</button><button data-t="p6">Achievements</button><button data-t="p7">Cloud</button></nav></div>
 <div class="pg on" id="p1"><p style="text-align:center;color:var(--mu)">Click the crystal to earn money. Put cards in your Squad (Inventory tab) to earn idle money.</p><button id="crystal" aria-label="Mine coins"></button></div>
-<div class="pg" id="p2"></div><div class="pg" id="p3"></div><div class="pg" id="p4"></div><div class="pg" id="p5"></div><div class="pg" id="p6"></div><div id="toasts"></div>
+<div class="pg" id="p2"></div><div class="pg" id="p3"></div><div class="pg" id="p4"></div><div class="pg" id="p5"></div><div class="pg" id="p6"></div><div class="pg" id="p7"></div><div id="toasts"></div>
 <div id="rv"><div id="rvt"></div><div id="stage"></div><div id="rvc"></div><div id="rvg"></div><div id="rvb"><button id="rvSell">Sell the rest</button> <button id="rvDone">Keep all</button></div></div><div id="fx"></div><div id="ban"></div>
 <script>
 /* ===== ART HOOK =====
@@ -305,7 +306,7 @@ const $=id=>document.getElementById(id),fmt=n=>'$'+(n*3/100).toLocaleString('en-
 let S={coins:1e4/3,cards:[],uid:1,click:1,auto:0,slots:3,sq:[],seen:{},u:{c:0,a:0}};
 try{const d=localStorage.getItem('mv1');if(d)S=Object.assign(S,JSON.parse(d))}catch(e){}
 S.vars=S.vars||{};S.cards.forEach(c=>{if(!c.err)S.vars[c.mid+'|'+c.t+(c.h?'h':'')]=1});if(!S.dexSync){Object.keys(S.seen).forEach(id=>{S.vars[id+'|normal']=1});S.dexSync=1}
-const save=()=>{try{localStorage.setItem('mv1',JSON.stringify(S));$('sv').textContent='Autosaved'}catch(e){$('sv').textContent='Browser blocked saving'}};
+const save=()=>{try{S.ts=Date.now();localStorage.setItem('mv1',JSON.stringify(S));$('sv').textContent='Autosaved'}catch(e){$('sv').textContent='Browser blocked saving'}};
 const val=c=>c.err?0:Math.floor(R[BY[c.mid].ri].v*T[c.t].m*(c.h?HOLO:1)),cardOf=u=>S.cards.find(c=>c.uid==u);
 const idle=()=>S.sq.reduce((a,u)=>{const c=cardOf(u);return a+(c?val(c)*.005:0)},0);
 /* sprites */
@@ -427,8 +428,8 @@ const cost={c:()=>Math.floor(25*3**S.u.c),a:()=>Math.floor(100*1.6**S.u.a),s:()=
 function up(k){const c=cost[k]();if(S.coins<c||(k=='s'&&S.slots>=8))return;S.coins-=c;if(k=='c'){S.u.c++;S.click*=2}if(k=='a'){S.u.a++;S.auto++}if(k=='s')S.slots++;save();render()}
 /* render */
 let tab='p1',flt='all';
-function render(){['p1','p2','p3','p4','p5','p6'].forEach(p=>$(p).classList.toggle('on',p==tab));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==tab));
- if(tab=='p2')shop();if(tab=='p3')inv();if(tab=='p4')binder();if(tab=='p5')infoPage();if(tab=='p6')achPage()}
+function render(){['p1','p2','p3','p4','p5','p6','p7'].forEach(p=>$(p).classList.toggle('on',p==tab));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==tab));
+ if(tab=='p2')shop();if(tab=='p3')inv();if(tab=='p4')binder();if(tab=='p5')infoPage();if(tab=='p6')achPage();if(tab=='p7')cloudPage()}
 function shop(){const p=$('p2');p.innerHTML='<h3>Packs</h3><div class="row" id="pk"></div><h3>Upgrades</h3><div class="row" id="ug"></div>';
  for(let i=0;i<8;i++){const r=i==7?{n:'Enhanced Godlike',c:'#ffd54a'}:R[i],d=document.createElement('div');d.className='box';if(i>=6)d.style.boxShadow='0 0 18px #fff8';d.innerHTML=`<b style="color:${r.c}">${r.n} Pack</b><small>${i==7?'10 cards: all guaranteed Godlike':i==6?'1 card: guaranteed Godlike':'10 cards, all '+r.n}</small><button>Buy ${fmt(PRICE(i))}</button>${S.perk4?`<br><button style="margin-top:6px">Buy 4x ${fmt(PRICE(i)*4)}</button>`:''}`;const bs=d.querySelectorAll('button');bs[0].disabled=S.coins<PRICE(i);bs[0].onclick=()=>buy(i,1);if(bs[1]){bs[1].disabled=S.coins<PRICE(i)*4;bs[1].onclick=()=>buy(i,4)}$('pk').appendChild(d)}
  [['c',`Click Power (${fmt(S.click)}/click)`],['a',`Auto Clicker (${fmt(S.auto*S.click)}/s)`],['s',`Squad Slot (${S.slots}/8)`]].forEach(([k,n])=>{const d=document.createElement('div');d.className='box';d.innerHTML=`<b>${n}</b><small>${k=='c'?'Doubles money per click':k=='a'?'+1 auto click per second':'+1 squad slot'}</small><button ${S.coins<cost[k]()||(k=='s'&&S.slots>=8)?'disabled':''}>${k=='s'&&S.slots>=8?'Maxed':'Upgrade '+fmt(cost[k]())}</button>`;d.querySelector('button').onclick=()=>up(k);$('ug').appendChild(d)});perkBox();megaBox();lockBox()}
@@ -467,7 +468,35 @@ function binder(){const p=$('p4'),tot=MON.length*TYPES.length*2,have=Object.keys
   ms.forEach(m=>{const ok=got(m.id);if(bs=='have'&&!ok||bs=='missing'&&ok)return;const d=document.createElement('div');d.className='card mini'+(ok?'':' no');d.style.setProperty('--rc',r.c);d.innerHTML=`<canvas width="40" height="40"></canvas><b>${m.name}</b>`;draw(d.querySelector('canvas'),m,bt=='any'?'normal':bt);$('b'+ri).appendChild(d)})})}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
 $('crystal').onclick=e=>{S.coins+=S.click;S.st.clicks++;chk();const f=document.createElement('div');f.className='fl';f.textContent='+'+fmt(S.click);f.style.left=e.clientX-10+'px';f.style.top=e.clientY-20+'px';document.body.appendChild(f);setTimeout(()=>f.remove(),800)};
-let n=0;setInterval(()=>{S.coins+=(idle()+S.auto*S.click)/10;$('co').textContent=fmt(S.coins);$('id').textContent=fmt(idle());$('au').textContent=fmt(S.auto*S.click);n++;if(n%50==0&&tab=='p2'&&document.activeElement.id!='mgs')shop();if(n%10==0){chk();if(tab=='p6')achPage()}if(n%100==0)save()},100);
-addEventListener('pagehide',save);addEventListener('beforeunload',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+let n=0;setInterval(()=>{S.coins+=(idle()+S.auto*S.click)/10;$('co').textContent=fmt(S.coins);$('id').textContent=fmt(idle());$('au').textContent=fmt(S.auto*S.click);n++;if(n%50==0&&tab=='p2'&&document.activeElement.id!='mgs')shop();if(n%10==0){chk();if(tab=='p6')achPage()}if(n%100==0)save();if(n%450==0)cloudSync()},100);
+/* ===== cloud save (Supabase, plain fetch) ===== */
+const SBU='https://vtffkisjtqddnjzpixsr.supabase.co',SBK='sb_publishable_Cw4zS1u5W-VNn2pwcwiunQ_4u6yvz1D';
+let au=null,syncing=0,cmsg='';try{au=JSON.parse(localStorage.getItem('pv_auth'))}catch(e){}
+const setAu=a=>{au=a;try{a?localStorage.setItem('pv_auth',JSON.stringify(a)):localStorage.removeItem('pv_auth')}catch(e){}};
+const sess=(j,email)=>setAu({access_token:j.access_token,refresh:j.refresh_token,exp:Math.floor(Date.now()/1000)+(j.expires_in||3600),uid:j.user.id,email});
+async function sb(path,opt={},useAuth=true){const h=Object.assign({apikey:SBK,'Content-Type':'application/json'},opt.headers||{});if(useAuth&&au){await fresh();h.Authorization='Bearer '+au.access_token}
+ const r=await fetch(SBU+path,Object.assign({},opt,{headers:h})),t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}
+ if(!r.ok)throw new Error((j&&(j.msg||j.error_description||j.message||j.error))||('HTTP '+r.status));return j}
+async function fresh(){if(au&&au.exp-60<Date.now()/1000){const j=await sb('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:au.refresh})},false);sess(j,au.email)}}
+async function authDo(kind,email,pw){const j=await sb(kind=='up'?'/auth/v1/signup':'/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password:pw})},false);if(!j.access_token)throw new Error('Check your email to confirm your account, then log in');sess(j,email)}
+async function pack(o){const s=JSON.stringify(o);if(!window.CompressionStream)return{j:o};const buf=await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer(),u=new Uint8Array(buf);let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return{z:btoa(b)}}
+async function unpack(d){if(d.j)return d.j;const u=Uint8Array.from(atob(d.z),c=>c.charCodeAt(0));return JSON.parse(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text())}
+const sum=o=>fmt(o.coins||0)+', '+(o.cards||[]).length+' cards, '+((o.st||{}).packs||0)+' packs';
+async function cloudGet(){const r=await sb('/rest/v1/saves?select=data,updated_at&user_id=eq.'+au.uid);return r&&r[0]}
+async function cloudPut(){const d=await pack(S);await sb('/rest/v1/saves?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:au.uid,data:d,updated_at:new Date().toISOString()})})}
+async function cloudSync(){if(!au||syncing)return;syncing=1;try{await cloudPut();cmsg='Cloud saved '+new Date().toLocaleTimeString()}catch(e){cmsg='Cloud error: '+e.message}syncing=0;$('cl').textContent=cmsg;if(tab=='p7')cloudPage()}
+function loadData(d){S=Object.assign({coins:0,cards:[],uid:1,click:1,auto:0,slots:3,sq:[],seen:{},u:{c:0,a:0},vars:{},ach:{},locks:0},d);S.st=S.st||{clicks:0,packs:0,cards:0,sold:0,mega:0,x4:0,god:0,h:0,sh:0,t:{},r:{},lockb:0,err:0,best:0,spent:0};save();render()}
+async function afterLogin(){const row=await cloudGet();if(!row){await cloudPut();return"No cloud save yet, so this device's save was uploaded."}const cd=await unpack(row.data),empty=!S.cards.length&&!(S.st&&S.st.packs);
+ if(empty||confirm('Cloud save: '+sum(cd)+'\nThis device: '+sum(S)+'\n\nOK = load the CLOUD save (replaces this device).\nCancel = keep THIS device and overwrite the cloud.')){loadData(cd);return'Loaded your cloud save.'}await cloudPut();return"Kept this device's save and updated the cloud."}
+function cloudPage(){const p=$('p7'),i=au?`<h3>Cloud save</h3><p>Signed in as <b>${au.email}</b></p><p style="color:var(--mu)">${cmsg||'Your progress saves to your account about every 45 seconds while you play.'}</p><button id="cs">Save now</button> <button id="cg">Load from cloud</button> <button id="co2">Log out</button>`:`<h3>Cloud save</h3><p style="color:var(--mu)">Log in to keep your progress online and play on any device.</p><input id="em" type="email" placeholder="email"> <input id="pw" type="password" placeholder="password (6+ characters)"> <button id="lg">Log in</button> <button id="su">Sign up</button><p style="color:var(--mu)">${cmsg}</p>`;
+ p.innerHTML=i+'<h3>Backup file</h3><button id="bd">Download backup</button> <input id="bf" type="file" accept=".json" style="margin-left:6px">';
+ const run=async(f)=>{try{cmsg='Working...';$('cl').textContent=cmsg;cmsg=await f()}catch(e){cmsg='Error: '+e.message}$('cl').textContent=cmsg;cloudPage()};
+ if(au){$('cs').onclick=()=>run(async()=>{await cloudPut();return'Saved to the cloud.'});$('co2').onclick=()=>{setAu(null);cmsg='Logged out.';$('cl').textContent='';cloudPage()};
+  $('cg').onclick=()=>run(async()=>{const row=await cloudGet();if(!row)return'No cloud save found.';const cd=await unpack(row.data);if(confirm('Load the cloud save?\n'+sum(cd)+'\nThis replaces what is on this device ('+sum(S)+').')){loadData(cd);return'Loaded your cloud save.'}return'Cancelled.'})}
+ else{const go=k=>run(async()=>{await authDo(k,$('em').value.trim(),$('pw').value);return await afterLogin()});$('lg').onclick=()=>go('in');$('su').onclick=()=>go('up')}
+ $('bd').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='pullvault-save.json';a.click()};
+ $('bf').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(confirm('Load this backup?\n'+sum(d)+'\nThis replaces what is on this device ('+sum(S)+').')){loadData(d);cmsg='Backup loaded.';cloudPage()}}catch(x){alert('That file is not a valid save.')}})}}
+if(au)(async()=>{try{const row=await cloudGet();if(row){const cd=await unpack(row.data);if((cd.ts||0)>(S.ts||0)+5000&&confirm('A newer cloud save was found.\nCloud: '+sum(cd)+'\nThis device: '+sum(S)+'\n\nLoad the cloud save?'))loadData(cd)}$('cl').textContent='Cloud: '+au.email}catch(e){$('cl').textContent='Cloud error: '+e.message}})();
+addEventListener('pagehide',save);addEventListener('beforeunload',save);document.addEventListener('visibilitychange',()=>{if(document.hidden){save();cloudSync()}});
 render();
 </script></body></html>
